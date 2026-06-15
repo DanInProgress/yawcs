@@ -10,6 +10,20 @@ cp .env.example .env   # then add your sessionKey
 
 The `.env` file holds your claude.ai credentials. At minimum set `CLAUDE_SESSION_KEY` (the `sessionKey` cookie from your browser's DevTools, under Application > Cookies > claude.ai). For non-browser access you may also need `CF_CLEARANCE`, `CF_BM`, and a matching `USER_AGENT` — see the comments in `.env.example`. Session keys are valid for roughly 30 days.
 
+## Credential loading
+
+`src/lib/auth.ts` calls `@std/dotenv` `load({ export: true })` at startup, so
+environment variables are populated automatically before any command runs.
+
+When using the compiled binary, `.env` is read from the **current working
+directory** — run the binary from the same directory that contains your `.env`
+file. Alternatively, export the four variables directly in your shell:
+
+- `CLAUDE_SESSION_KEY`
+- `CF_CLEARANCE`
+- `CF_BM`
+- `USER_AGENT`
+
 ## Commands
 
 ```
