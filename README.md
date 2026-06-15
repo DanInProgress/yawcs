@@ -5,7 +5,6 @@ Yet Another Web Claude SDK — a CLI for validating, packing, and syncing claude
 ## Setup
 
 ```bash
-npm install
 cp .env.example .env   # then add your sessionKey
 ```
 
@@ -14,7 +13,7 @@ The `.env` file holds your claude.ai credentials. At minimum set `CLAUDE_SESSION
 ## Commands
 
 ```
-node src/cli.js <command> [options]
+deno run -A mod.ts <command> [options]
 ```
 
 | Command | Description |
@@ -41,17 +40,18 @@ node src/cli.js <command> [options]
 ## Project layout
 
 ```
+mod.ts                # Entry point
 src/
-  cli.js              # Commander CLI entry point
+  cli.ts              # CLI entry point
   lib/
-    api.js            # Skills API client (upload, list, download)
-    auth.js           # Session auth headers
-    cache.js          # Remote skill cache
-    hash.js           # Content hashing for skip/update detection
-    log.js            # Request/response logger
-    pack.js           # .skill archive builder
-    unpack.js         # .skill archive unpacker
-    validate.js       # Skill manifest validator
+    api.ts            # Skills API client (upload, list, download)
+    auth.ts           # Session auth headers
+    cache.ts          # Remote skill cache
+    hash.ts           # Content hashing for skip/update detection
+    log.ts            # Request/response logger
+    pack.ts           # .skill archive builder
+    unpack.ts         # .skill archive unpacker
+    validate.ts       # Skill manifest validator
 skills/               # Local skill directories
 research/             # API and web architecture research notes
 ```
