@@ -4,6 +4,7 @@
 
 let verbose = true;
 
+/** Enable or disable verbose HTTP request/response logging. */
 export function setVerbose(value: boolean): void {
   verbose = value;
 }
