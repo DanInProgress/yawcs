@@ -1,4 +1,5 @@
 import { load } from "@std/dotenv";
+import { red, yellow } from "@std/fmt/colors";
 await load({ export: true });
 
 /**
@@ -9,7 +10,7 @@ export function getCookieHeader(): string {
   const sessionKey = Deno.env.get("CLAUDE_SESSION_KEY");
   if (!sessionKey) {
     console.error(
-      "Error: CLAUDE_SESSION_KEY is not set.\n" +
+      red("✗") + " Error: CLAUDE_SESSION_KEY is not set.\n" +
         "Copy .env.example to .env and populate it with your session cookie from:\n" +
         "  Browser DevTools → Application → Cookies → claude.ai → sessionKey",
     );
@@ -32,7 +33,8 @@ export function getBaseHeaders(): Record<string, string> {
   const userAgent = Deno.env.get("USER_AGENT");
   if (!userAgent) {
     console.warn(
-      "WARN: USER_AGENT is not set in .env. Cloudflare ties cf_clearance to the browser UA.\n" +
+      yellow("⚠") +
+        " WARN: USER_AGENT is not set in .env. Cloudflare ties cf_clearance to the browser UA.\n" +
         "      Copy your User-Agent from DevTools > Network > any request > Request Headers.",
     );
   }

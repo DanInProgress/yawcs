@@ -1,5 +1,6 @@
 import { existsSync } from "@std/fs";
 import { join } from "@std/path";
+import { yellow } from "@std/fmt/colors";
 import { hashZipBuffer } from "./hash.ts";
 
 const CACHE_ROOT = "cache";
@@ -35,7 +36,7 @@ export function readIndex(): CacheIndex {
   try {
     return JSON.parse(Deno.readTextFileSync(INDEX_PATH));
   } catch {
-    console.warn("  warn: cache index is malformed, treating as empty");
+    console.warn(yellow("⚠") + "  warn: cache index is malformed, treating as empty");
     return {};
   }
 }
