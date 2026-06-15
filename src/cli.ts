@@ -51,7 +51,8 @@ Deno.addSignalListener("SIGINT", () => {
 // ---------------------------------------------------------------------------
 // validate
 // ---------------------------------------------------------------------------
-function runValidate(positionals: string[], _args: ParsedArgs): Promise<void> {
+// deno-lint-ignore require-await
+async function runValidate(positionals: string[], _args: ParsedArgs): Promise<void> {
   const targets = resolveTargets(positionals[0]);
   let hasErrors = false;
   for (const dir of targets) {
@@ -60,7 +61,6 @@ function runValidate(positionals: string[], _args: ParsedArgs): Promise<void> {
     if (result.errors.length > 0) hasErrors = true;
   }
   if (hasErrors) Deno.exit(1);
-  return Promise.resolve();
 }
 
 // ---------------------------------------------------------------------------

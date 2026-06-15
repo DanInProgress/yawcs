@@ -1,4 +1,5 @@
 import { basename } from "@std/path";
+import { bold, gray } from "@std/fmt/colors";
 import { getBaseHeaders } from "./auth.ts";
 import { logRequest, logResponse } from "./log.ts";
 import { ensureCache, getEntry, isRemoteCached, storeRemote } from "./cache.ts";
@@ -48,7 +49,7 @@ async function getOrgId(): Promise<string> {
     );
   }
 
-  console.log(`  org ID: ${_orgId}`);
+  console.log(gray(`  org ID: ${_orgId}`));
   return _orgId;
 }
 
@@ -185,13 +186,15 @@ export async function listSkills(
   }
 
   const col = (s: unknown, n: number) => String(s ?? "").padEnd(n);
-  console.log("\n" + col("NAME", 28) + col("ENABLED", 9) + col("UPDATED", 22) + "DESCRIPTION");
-  console.log("-".repeat(95));
+  console.log(
+    "\n" + bold(col("NAME", 28) + col("ENABLED", 9) + col("UPDATED", 22) + "DESCRIPTION"),
+  );
+  console.log(gray("-".repeat(95)));
   for (const s of skills) {
     const updated = s.updated_at ? new Date(s.updated_at as string).toLocaleString() : "—";
     const desc = ((s.description as string) ?? "").slice(0, 40);
     console.log(
-      col(s.name, 28) + col(s.enabled ? "yes" : "no", 9) + col(updated, 22) + desc,
+      bold(col(s.name, 28)) + col(s.enabled ? "yes" : "no", 9) + gray(col(updated, 22)) + desc,
     );
   }
 }
