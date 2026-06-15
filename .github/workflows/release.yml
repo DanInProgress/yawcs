@@ -1,0 +1,58 @@
+# Builds and publishes yawcs binaries on a version tag.
+#
+# Approach: a single job runs `deno task build` (which delegates all
+# cross-compile logic to build.ts — the single source of truth) and then
+# attaches the three produced binaries to a GitHub Release. Deno's
+# `deno compile --target` cross-compiles all targets from one runner, so a
+# build matrix is unnecessary and a single job keeps the release atomic.
+name: release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write # required to create the GitHub Release
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      # Cache Deno's dependency/registry cache between runs.
+      - name: Cache Deno dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/deno
+          key: ${{ runner.os }}-deno-${{ hashFiles('deno.json', 'deno.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-deno-
+
+      # CI smoke test: fail fast on formatting, lint, or type errors.
+      - name: Verify (fmt, lint, type-check)
+        run: |
+          deno fmt --check
+          deno lint
+          deno check mod.ts
+
+      - name: Build all targets
+        run: deno task build
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/yawcs-linux-x64
+            dist/yawcs-macos-arm64
+            dist/yawcs-windows-x64.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

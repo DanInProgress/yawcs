@@ -1,0 +1,35 @@
+{
+  "version": "5",
+  "specifiers": {
+    "jsr:@std/fmt@1": "1.0.10",
+    "jsr:@std/yaml@*": "1.0.12"
+  },
+  "jsr": {
+    "@std/fmt@1.0.10": {
+      "integrity": "90dfba288802ac6de82fb31d0917eb9e4450b9925b954d5e51fc29ac07419db5"
+    },
+    "@std/yaml@1.0.12": {
+      "integrity": "7deabca4545bcedd07c5f69ea53acea71b8b4c67562f224e17b90d75944cb20c"
+    }
+  },
+  "workspace": {
+    "dependencies": [
+      "jsr:@std/cli@1",
+      "jsr:@std/crypto@1",
+      "jsr:@std/dotenv@0.225",
+      "jsr:@std/fmt@1",
+      "jsr:@std/front-matter@1",
+      "jsr:@std/fs@1",
+      "jsr:@std/path@1",
+      "npm:adm-zip@0.5"
+    ],
+    "packageJson": {
+      "dependencies": [
+        "npm:adm-zip@~0.5.17",
+        "npm:commander@^12.1.0",
+        "npm:dotenv@^16.4.5",
+        "npm:gray-matter@^4.0.3"
+      ]
+    }
+  }
+}
