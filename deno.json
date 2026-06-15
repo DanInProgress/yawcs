@@ -22,6 +22,14 @@
     "audit": "deno audit",
     "doc": "deno doc --html --output=./docs src/lib/"
   },
-  "lint": { "rules": { "tags": ["recommended"] } },
-  "fmt": { "useTabs": false, "lineWidth": 100, "indentWidth": 2 }
+  "lint": {
+    "rules": { "tags": ["recommended"] },
+    "exclude": ["research/", "dist/", "docs/"]
+  },
+  "fmt": {
+    "useTabs": false,
+    "lineWidth": 100,
+    "indentWidth": 2,
+    "exclude": ["research/", "test/fixtures/", "dist/", "cache/", "docs/", "README.md"]
+  }
 }

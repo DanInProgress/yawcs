@@ -1,8 +1,8 @@
-import AdmZip from 'adm-zip';
-import { mkdirSync } from 'fs';
-import { resolve as resolvePath, basename, join } from 'path';
+// @ts-types="npm:@types/adm-zip@^0.5.8"
+import AdmZip from "adm-zip";
+import { basename, join, resolve as resolvePath } from "@std/path";
 
-const DIST_DIR = 'dist';
+const DIST_DIR = "dist";
 
 /**
  * Package a skill directory into a .skill archive (ZIP format).
@@ -12,11 +12,15 @@ const DIST_DIR = 'dist';
  *   ...
  *
  * @param {string} skillDir - path to the skill directory
- * @returns {string} - path to the created .skill file
+ * @returns {Promise<string>} - path to the created .skill file
  */
-export function pack(skillDir) {
+export async function pack(skillDir: string): Promise<string> {
   const dirName = basename(skillDir);
-  mkdirSync(DIST_DIR, { recursive: true });
+  try {
+    await Deno.mkdir(DIST_DIR, { recursive: true });
+  } catch (err) {
+    if (!(err instanceof Deno.errors.AlreadyExists)) throw err;
+  }
   const outPath = join(DIST_DIR, `${dirName}.skill`);
 
   const zip = new AdmZip();

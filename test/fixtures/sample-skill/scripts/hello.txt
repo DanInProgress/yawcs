@@ -1,0 +1,2 @@
+Hello from sample-skill fixture.
+This file exists to ensure nested paths are included in the hash.
