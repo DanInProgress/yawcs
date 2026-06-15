@@ -92,12 +92,12 @@ export function isRemoteCached(skillName: string, updatedAt: string): boolean {
  * @param buf - raw .skill ZIP bytes
  * @returns contentHash
  */
-export function storeRemote(
+export async function storeRemote(
   skillName: string,
   updatedAt: string,
   buf: Uint8Array,
-): string {
-  const contentHash = hashZipBuffer(buf);
+): Promise<string> {
+  const contentHash = await hashZipBuffer(buf);
   const skillPath = join(CACHE_REMOTE, `${contentHash}.skill`);
 
   // Content-addressed: if file already exists, it's identical — skip write

@@ -122,7 +122,7 @@ async function runUpload(positionals: string[], args: ParsedArgs): Promise<void>
     if (!remote) {
       action = "new";
     } else {
-      const localHash = hashZipBuffer(Deno.readFileSync(outPath));
+      const localHash = await hashZipBuffer(Deno.readFileSync(outPath));
       const { contentHash: remoteHash } = await fetchAndCacheRemoteSkill(
         remote.id as string,
         remote.name as string,
@@ -151,7 +151,7 @@ async function runUpload(positionals: string[], args: ParsedArgs): Promise<void>
       const uploaded = refreshed.find((s) => s.name === name);
       if (uploaded) {
         const buf = Deno.readFileSync(outPath);
-        storeRemote(name, uploaded.updated_at as string, buf);
+        await storeRemote(name, uploaded.updated_at as string, buf);
       }
     }
   }
@@ -210,7 +210,7 @@ async function runDownload(positionals: string[], args: ParsedArgs): Promise<voi
 
     const localDir = join("skills", s.name as string);
     if (existsSync(localDir)) {
-      const localHash = hashSkillDir(localDir);
+      const localHash = await hashSkillDir(localDir);
       if (localHash === remoteHash) {
         console.log(`  skipped (local matches remote)`);
         continue;

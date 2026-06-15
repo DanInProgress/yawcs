@@ -22,8 +22,8 @@ const PINNED_HASH = "87347e458e72c6d217bce5435a605c88697b3983218cbc3c3f27f35d7a0
 
 const FIXTURE_DIR = resolve(join(fromFileUrl(import.meta.url), "../../test/fixtures/sample-skill"));
 
-Deno.test("hashSkillDir produces the pinned golden hash", () => {
-  const actual = hashSkillDir(FIXTURE_DIR);
+Deno.test("hashSkillDir produces the pinned golden hash", async () => {
+  const actual = await hashSkillDir(FIXTURE_DIR);
   assertEquals(
     actual,
     PINNED_HASH,
@@ -31,15 +31,15 @@ Deno.test("hashSkillDir produces the pinned golden hash", () => {
   );
 });
 
-Deno.test("hashZipBuffer agrees with hashSkillDir and the pinned hash", () => {
+Deno.test("hashZipBuffer agrees with hashSkillDir and the pinned hash", async () => {
   // Mirror pack.ts: addLocalFolder(resolvedDir, basename) so entries are
   // "sample-skill/SKILL.md", "sample-skill/scripts/hello.txt", etc.
   const zip = new AdmZip();
   zip.addLocalFolder(FIXTURE_DIR, basename(FIXTURE_DIR));
   const buf: Uint8Array = zip.toBuffer();
 
-  const dirHash = hashSkillDir(FIXTURE_DIR);
-  const zipHash = hashZipBuffer(buf);
+  const dirHash = await hashSkillDir(FIXTURE_DIR);
+  const zipHash = await hashZipBuffer(buf);
 
   assertEquals(
     zipHash,

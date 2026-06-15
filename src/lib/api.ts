@@ -167,7 +167,7 @@ export async function fetchAndCacheRemoteSkill(
     return { contentHash: getEntry(skillName)!.content_hash, fromCache: true };
   }
   const buf = await downloadSkillFile(skillId);
-  const contentHash = storeRemote(skillName, updatedAt, buf);
+  const contentHash = await storeRemote(skillName, updatedAt, buf);
   return { contentHash, fromCache: false };
 }
 

@@ -1,8 +1,25 @@
-import { createHash } from "node:crypto";
 import { join, relative } from "@std/path";
 // @ts-types="npm:@types/adm-zip@^0.5.8"
 import AdmZip from "adm-zip";
 import type { Buffer } from "node:buffer";
+
+/**
+ * SHA-256 of `data` as a lowercase hex string.
+ *
+ * Matches the output of `createHash("sha256").update(data).digest("hex")`.
+ *
+ * @param data
+ * @returns hex SHA-256
+ */
+async function hexDigest(data: Uint8Array): Promise<string> {
+  // crypto.subtle.digest wants a BufferSource backed by a plain ArrayBuffer;
+  // Deno's file/zip byte arrays are typed Uint8Array<ArrayBufferLike>, so cast
+  // at this boundary. The bytes are identical either way.
+  const buf = await crypto.subtle.digest("SHA-256", data as BufferSource);
+  return Array.from(new Uint8Array(buf))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
 
 /**
  * Recursively collect all regular file paths under a directory.
@@ -41,15 +58,22 @@ function walkDir(dir: string): string[] {
  * @param files
  * @returns hex SHA-256
  */
-function canonicalHash(files: { path: string; data: Uint8Array }[]): string {
+async function canonicalHash(
+  files: { path: string; data: Uint8Array }[],
+): Promise<string> {
   files.sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
-  const outer = createHash("sha256");
+  // Web Crypto has no streaming update(); accumulate the same byte sequence the
+  // streaming algorithm would feed the outer hash, then digest once. SHA-256
+  // update() concatenates inputs, so this is byte-identical to the streaming
+  // node:crypto version.
+  const parts: string[] = [];
   for (const { path, data } of files) {
-    const innerHex = createHash("sha256").update(data).digest("hex");
-    outer.update(path + "\0");
-    outer.update(innerHex + "\n");
+    const innerHex = await hexDigest(data);
+    parts.push(path + "\0");
+    parts.push(innerHex + "\n");
   }
-  return outer.digest("hex");
+  const outerBuf = new TextEncoder().encode(parts.join(""));
+  return hexDigest(outerBuf);
 }
 
 /**
@@ -61,7 +85,7 @@ function canonicalHash(files: { path: string; data: Uint8Array }[]): string {
  * @param dir - path to skill directory (e.g. 'skills/my-skill')
  * @returns hex SHA-256
  */
-export function hashSkillDir(dir: string): string {
+export function hashSkillDir(dir: string): Promise<string> {
   const absFiles = walkDir(dir).sort();
   const files = absFiles.map((abs) => ({
     path: relative(dir, abs),
@@ -80,7 +104,7 @@ export function hashSkillDir(dir: string): string {
  * @param buf - raw .skill ZIP bytes
  * @returns hex SHA-256
  */
-export function hashZipBuffer(buf: Uint8Array): string {
+export function hashZipBuffer(buf: Uint8Array): Promise<string> {
   // adm-zip's bundled type declarations predate Buffer being a Uint8Array
   // subclass and only list `string | Buffer`. The constructor accepts a
   // Uint8Array at runtime, so cast at this boundary only.
