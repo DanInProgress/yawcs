@@ -2,6 +2,8 @@
 // These are undocumented endpoints — logging everything helps us learn the
 // response shapes and catch changes/breakage quickly.
 
+import { bold, cyan, gray, green, red, yellow } from "@std/fmt/colors";
+
 let verbose = true;
 
 /** Enable or disable verbose HTTP request/response logging. */
@@ -59,12 +61,12 @@ export function logRequest(
   bodyDesc?: string,
 ): void {
   if (!verbose) return;
-  console.log(`\n→ ${method} ${url}`);
+  console.log(`\n${cyan("→")} ${method} ${bold(url)}`);
   for (const [key, value] of Object.entries(headers)) {
     const display = REDACT_REQUEST.has(key.toLowerCase()) ? "[redacted]" : value;
-    console.log(`  ${key}: ${display}`);
+    console.log(`  ${gray(key)}: ${display}`);
   }
-  if (bodyDesc) console.log(`  body: ${bodyDesc}`);
+  if (bodyDesc) console.log(`  ${gray("body:")} ${bodyDesc}`);
 }
 
 /**
@@ -75,12 +77,20 @@ export function logRequest(
  */
 export function logResponse(status: number, headers: Headers, rawBody: string | null): void {
   if (!verbose) return;
-  console.log(`← ${status}`);
+  let statusStr: string;
+  if (status >= 200 && status < 300) {
+    statusStr = green(`← ${status}`);
+  } else if (status >= 300 && status < 400) {
+    statusStr = yellow(`← ${status}`);
+  } else {
+    statusStr = red(`← ${status}`);
+  }
+  console.log(statusStr);
   for (const [key, value] of headers.entries()) {
     const display = REDACT_RESPONSE.has(key.toLowerCase()) ? "[redacted]" : value;
-    console.log(`  ${key}: ${display}`);
+    console.log(`  ${gray(key)}: ${display}`);
   }
   const ct = headers.get("content-type");
   const body = formatBody(ct, rawBody);
-  if (body) console.log(`  body: ${body}`);
+  if (body) console.log(`  ${gray("body:")} ${body}`);
 }

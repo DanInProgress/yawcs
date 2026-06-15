@@ -2,6 +2,8 @@
 import { parseArgs } from "@std/cli/parse-args";
 import { existsSync } from "@std/fs";
 import { basename, join } from "@std/path";
+import { bold, cyan, gray, green, red, yellow } from "@std/fmt/colors";
+import { format as formatBytes } from "@std/fmt/bytes";
 import { validate } from "./lib/validate.ts";
 import type { ValidationResult } from "./lib/validate.ts";
 import { pack } from "./lib/pack.ts";
@@ -77,7 +79,7 @@ async function runPack(positionals: string[], _args: ParsedArgs): Promise<void> 
     activePackPath = join("dist", `${basename(dir)}.skill`);
     const outPath = await pack(dir);
     activePackPath = null;
-    console.log(`  packed → ${outPath}`);
+    console.log(`  ${green("✓")} packed → ${outPath}`);
   }
   if (hasErrors) Deno.exit(1);
 }
@@ -95,7 +97,7 @@ async function runUpload(positionals: string[], args: ParsedArgs): Promise<void>
     const remoteSkills = await fetchSkills();
     remoteMap = new Map(remoteSkills.map((s) => [s.name as string, s]));
   } catch (err) {
-    console.error(`  error fetching remote skills: ${(err as Error).message}`);
+    console.error(`  ${red("✗")} error fetching remote skills: ${(err as Error).message}`);
     Deno.exit(1);
   }
 
@@ -112,7 +114,7 @@ async function runUpload(positionals: string[], args: ParsedArgs): Promise<void>
     activePackPath = join("dist", `${basename(dir)}.skill`);
     const outPath = await pack(dir);
     activePackPath = null;
-    const sizeKb = (Deno.statSync(outPath).size / 1024).toFixed(1);
+    const sizeStr = formatBytes(Deno.statSync(outPath).size);
 
     // Determine action by comparing local content hash to remote
     const name = basename(dir);
@@ -133,19 +135,21 @@ async function runUpload(positionals: string[], args: ParsedArgs): Promise<void>
 
     if (dryRun) {
       if (action === "skip") {
-        console.log(`  [dry-run] ${name} (${sizeKb} KB) → SKIP (up to date)`);
+        console.log(
+          `  ${cyan("[dry-run]")} ${name} (${sizeStr}) → ${gray("SKIP (up to date)")}`,
+        );
       } else {
-        const tag = action === "new" ? "NEW" : "UPDATE";
-        console.log(`  [dry-run] ${name} (${sizeKb} KB) → ${tag}`);
+        const tag = action === "new" ? green("NEW") : yellow("UPDATE");
+        console.log(`  ${cyan("[dry-run]")} ${name} (${sizeStr}) → ${tag}`);
       }
       Deno.removeSync(outPath);
     } else if (action === "skip") {
-      console.log(`  skipped ${name} (up to date)`);
+      console.log(gray(`  skipped ${name} (up to date)`));
       Deno.removeSync(outPath);
     } else {
       await upload(outPath);
-      const tag = action === "new" ? "NEW" : "UPDATE";
-      console.log(`  uploaded ${name} ✓ [${tag}]`);
+      const tag = action === "new" ? green("[NEW]") : yellow("[UPDATE]");
+      console.log(`  ${green("✓")} uploaded ${name} ${tag}`);
       // Re-fetch to get the new updated_at, then cache the uploaded artifact
       const refreshed = await fetchSkills();
       const uploaded = refreshed.find((s) => s.name === name);
@@ -177,7 +181,7 @@ async function runDownload(positionals: string[], args: ParsedArgs): Promise<voi
   try {
     allSkills = await fetchSkills({ includeWiggleSkills: args["include-wiggle"] });
   } catch (err) {
-    console.error(`  error fetching skills: ${(err as Error).message}`);
+    console.error(`  ${red("✗")} error fetching skills: ${(err as Error).message}`);
     Deno.exit(1);
   }
 
@@ -185,7 +189,7 @@ async function runDownload(positionals: string[], args: ParsedArgs): Promise<voi
 
   if (candidates.length === 0) {
     if (skillName) {
-      console.error(`skill not found: "${skillName}"`);
+      console.error(`${red("✗")} skill not found: "${skillName}"`);
     } else {
       console.log("No user-created skills found on claude.ai.");
     }
@@ -194,7 +198,7 @@ async function runDownload(positionals: string[], args: ParsedArgs): Promise<voi
 
   ensureCache();
   for (const s of candidates) {
-    console.log(`\n[${s.name}]`);
+    console.log(`\n${bold(`[${s.name}]`)}`);
     let remoteHash: string;
     try {
       const result = await fetchAndCacheRemoteSkill(
@@ -204,7 +208,7 @@ async function runDownload(positionals: string[], args: ParsedArgs): Promise<voi
       );
       remoteHash = result.contentHash;
     } catch (err) {
-      console.error(`  error fetching "${s.name}": ${(err as Error).message}`);
+      console.error(`  ${red("✗")} error fetching "${s.name}": ${(err as Error).message}`);
       continue;
     }
 
@@ -212,25 +216,29 @@ async function runDownload(positionals: string[], args: ParsedArgs): Promise<voi
     if (existsSync(localDir)) {
       const localHash = await hashSkillDir(localDir);
       if (localHash === remoteHash) {
-        console.log(`  skipped (local matches remote)`);
+        console.log(gray(`  skipped (local matches remote)`));
         continue;
       }
       if (!overwrite) {
-        console.log(`  skipped (differs from remote — use --overwrite to replace)`);
+        console.log(gray(`  skipped (differs from remote — use --overwrite to replace)`));
         continue;
       }
     }
 
     const buf = readCachedSkill(remoteHash);
     if (!buf) {
-      console.error(`  error: cached skill file missing for "${s.name}"`);
+      console.error(`  ${red("✗")} error: cached skill file missing for "${s.name}"`);
       continue;
     }
     activeUnpackDir = localDir;
     unpackWasExisting = existsSync(localDir);
     const result = unpack(buf, s.name as string, { overwrite });
     activeUnpackDir = null;
-    console.log(result === "overwritten" ? `  downloaded ✓ (overwritten)` : `  downloaded ✓`);
+    console.log(
+      result === "overwritten"
+        ? `  ${green("✓")} downloaded (overwritten)`
+        : `  ${green("✓")} downloaded`,
+    );
   }
 }
 
@@ -334,11 +342,11 @@ function resolveTargets(skillDir?: string): string[] {
  * Print validate() results to stdout/stderr with a dir header.
  */
 function printResult(dir: string, result: ValidationResult): void {
-  console.log(`\n[${dir}]`);
-  for (const e of result.errors) console.error(`  ERROR: ${e}`);
-  for (const w of result.warnings) console.warn(`  WARN:  ${w}`);
+  console.log(`\n${bold(`[${dir}]`)}`);
+  for (const e of result.errors) console.error(`  ${red("ERROR:")} ${e}`);
+  for (const w of result.warnings) console.warn(`  ${yellow("WARN: ")} ${w}`);
   if (result.errors.length === 0 && result.warnings.length === 0) {
-    console.log("  OK");
+    console.log(`  ${green("OK")}`);
   }
 }
 
