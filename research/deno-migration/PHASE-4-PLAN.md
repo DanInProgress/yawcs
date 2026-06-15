@@ -77,6 +77,25 @@ carefully (per-byte `padStart(2,"0")`).
 
 ## Item 4.2 — Replace `npm:adm-zip` with `jsr:@std/archive` (drop the npm bridge)
 
+> **Feasibility check — 2026-06-15 — DEFERRED**
+>
+> Checked `jsr:@std/archive` (v0.225.4) and its successor `jsr:@std/tar` (v0.1.10) via
+> `deno doc jsr:@std/archive` and `deno doc jsr:@std/tar`.
+>
+> **Finding:** Both packages are **TAR-only** — they provide `Tar`/`Untar` (v0.225) and
+> `TarStream`/`UntarStream` (v0.1.10) for `.tar` archives only. `@std/archive` itself is
+> deprecated with an explicit forward to `@std/tar`. There is no `@std/zip` or any ZIP
+> read/write support anywhere in the JSR standard library as of this date.
+>
+> **Missing capabilities** (all required for this migration):
+> - ZIP archive creation in memory or on disk (no `@std/zip` at all)
+> - `addLocalFolder(dir, prefix)` equivalent (directory-to-ZIP)
+> - `extractAllTo(dest, overwrite)` equivalent (ZIP-to-directory)
+> - `getEntries()` + `entry.getData()` equivalent (ZIP entry enumeration)
+>
+> **Verdict:** DO NOT migrate. Keep `npm:adm-zip`. Re-check if/when a `jsr:@std/zip` package
+> appears or when `@std/archive` gains ZIP write support.
+
 **Why:** `npm:adm-zip` is the only remaining npm runtime dependency. Moving to the pure-Deno
 `@std/archive` removes the npm bridge and the `@ts-types` directives entirely.
 
